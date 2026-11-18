@@ -1,0 +1,200 @@
+@startuml
+package questao1 {
+    class Main <<Provider selector>> {
+        {static} -FABRICA_AWS: FabricaRecursosNuvem
+        {static} -FABRICA_AZURE: FabricaRecursosNuvem
+        {static} +main(args: String[]): void throws Exception
+        {static} -provisionar(solicitacao: SolicitacaoAmbiente): void
+        {static} -selecionarFabrica(provedor: String): FabricaRecursosNuvem
+    }
+
+    interface FabricaRecursosNuvem <<Abstract Factory>> {
+        +criarMaquinaVirtual(): MaquinaVirtual
+        +criarArmazenamentoObjetos(quantidadeGb: int): ArmazenamentoObjetos
+        +criarFilaMensagens(): FilaMensagens
+        +getCustoHoraMaquina(): double
+        +getCustoGbMes(): double
+        +getCustoFilaMes(): double
+        +getNomeProvedor(): String
+    }
+
+    class FabricaAws <<Concrete Factory>> {
+        {static} -CUSTO_HORA_MAQUINA: double = 0.10
+        {static} -CUSTO_GB_MES: double = 0.023
+        {static} -CUSTO_FILA_MES: double = 0.40
+        -sequenciaMaquinas: AtomicInteger
+        -sequenciaArmazenamentos: AtomicInteger
+        -sequenciaFilas: AtomicInteger
+        +criarMaquinaVirtual(): MaquinaVirtual
+        +criarArmazenamentoObjetos(quantidadeGb: int): ArmazenamentoObjetos
+        +criarFilaMensagens(): FilaMensagens
+        +getCustoHoraMaquina(): double
+        +getCustoGbMes(): double
+        +getCustoFilaMes(): double
+        +getNomeProvedor(): String
+    }
+    class FabricaAzure <<Concrete Factory>> {
+        {static} -CUSTO_HORA_MAQUINA: double = 0.12
+        {static} -CUSTO_GB_MES: double = 0.02
+        {static} -CUSTO_FILA_MES: double = 0.50
+        -sequenciaMaquinas: AtomicInteger
+        -sequenciaArmazenamentos: AtomicInteger
+        -sequenciaFilas: AtomicInteger
+        +criarMaquinaVirtual(): MaquinaVirtual
+        +criarArmazenamentoObjetos(quantidadeGb: int): ArmazenamentoObjetos
+        +criarFilaMensagens(): FilaMensagens
+        +getCustoHoraMaquina(): double
+        +getCustoGbMes(): double
+        +getCustoFilaMes(): double
+        +getNomeProvedor(): String
+    }
+    FabricaAws ..|> FabricaRecursosNuvem
+    FabricaAzure ..|> FabricaRecursosNuvem
+
+    interface RecursoNuvem <<Abstract Product>> {
+        +getIdentificador(): String
+        +getCustoMensal(): double
+    }
+
+    interface MaquinaVirtual <<Abstract Product>> {
+    }
+    interface ArmazenamentoObjetos <<Abstract Product>> {
+    }
+    interface FilaMensagens <<Abstract Product>> {
+    }
+    MaquinaVirtual --|> RecursoNuvem
+    ArmazenamentoObjetos --|> RecursoNuvem
+    FilaMensagens --|> RecursoNuvem
+
+    class MaquinaAws <<Concrete Product>> {
+        -identificador: String
+        -custoMensal: double
+        ~MaquinaAws(identificador: String, custoMensal: double)
+        +getIdentificador(): String
+        +getCustoMensal(): double
+    }
+    class ArmazenamentoAws <<Concrete Product>> {
+        -identificador: String
+        -custoMensal: double
+        ~ArmazenamentoAws(identificador: String, custoMensal: double)
+        +getIdentificador(): String
+        +getCustoMensal(): double
+    }
+    class FilaAws <<Concrete Product>> {
+        -identificador: String
+        -custoMensal: double
+        ~FilaAws(identificador: String, custoMensal: double)
+        +getIdentificador(): String
+        +getCustoMensal(): double
+    }
+    class MaquinaAzure <<Concrete Product>> {
+        -identificador: String
+        -custoMensal: double
+        ~MaquinaAzure(identificador: String, custoMensal: double)
+        +getIdentificador(): String
+        +getCustoMensal(): double
+    }
+    class ArmazenamentoAzure <<Concrete Product>> {
+        -identificador: String
+        -custoMensal: double
+        ~ArmazenamentoAzure(identificador: String, custoMensal: double)
+        +getIdentificador(): String
+        +getCustoMensal(): double
+    }
+    class FilaAzure <<Concrete Product>> {
+        -identificador: String
+        -custoMensal: double
+        ~FilaAzure(identificador: String, custoMensal: double)
+        +getIdentificador(): String
+        +getCustoMensal(): double
+    }
+    MaquinaAws ..|> MaquinaVirtual
+    ArmazenamentoAws ..|> ArmazenamentoObjetos
+    FilaAws ..|> FilaMensagens
+    MaquinaAzure ..|> MaquinaVirtual
+    ArmazenamentoAzure ..|> ArmazenamentoObjetos
+    FilaAzure ..|> FilaMensagens
+
+    class ProvisionadorAmbiente <<Client>> {
+        {static} -HORAS_MENSAIS_ESTIMADAS: int = 730
+        -fabrica: FabricaRecursosNuvem
+        +ProvisionadorAmbiente(fabrica: FabricaRecursosNuvem)
+        +provisionar(solicitacao: SolicitacaoAmbiente): void throws IOException
+        -calcularCusto(solicitacao: SolicitacaoAmbiente): double
+    }
+    ProvisionadorAmbiente --> FabricaRecursosNuvem
+    ProvisionadorAmbiente ..> AmbienteProvisionado
+    ProvisionadorAmbiente ..> Configuracao
+    ProvisionadorAmbiente ..> HistoricoAuditoria
+
+    class AmbienteProvisionado {
+        -nome: String
+        -provedor: String
+        -regiao: String
+        -custoMensalEstimado: double
+        -identificadoresRecursos: List<String>
+        +AmbienteProvisionado(nome: String, provedor: String, regiao: String, custoMensalEstimado: double)
+        +adicionarRecurso(recurso: RecursoNuvem): void
+        +getNome(): String
+        +getProvedor(): String
+        +getRegiao(): String
+        +getCustoMensalEstimado(): double
+        +getIdentificadoresRecursos(): List<String>
+        +imprimirResumo(): void
+    }
+
+    class SolicitacaoAmbiente {
+        -nomeAmbiente: String
+        -provedor: String
+        -quantidadeMaquinas: int
+        -quantidadeGb: int
+        +SolicitacaoAmbiente(nomeAmbiente: String, provedor: String, quantidadeMaquinas: int, quantidadeGb: int)
+        +getNomeAmbiente(): String
+        +getProvedor(): String
+        +getQuantidadeMaquinas(): int
+        +getQuantidadeGb(): int
+    }
+
+    class Configuracao <<Singleton>> {
+        {static} -instancia: Configuracao
+        -regiaoPadrao: String
+        -orcamentoMensalMaximo: double
+        -Configuracao() throws IOException
+        {static} +obterInstancia(): Configuracao throws IOException
+        +getRegiaoPadrao(): String
+        +getOrcamentoMensalMaximo(): double
+    }
+
+    class HistoricoAuditoria <<Singleton>> {
+        {static} -INSTANCIA: HistoricoAuditoria
+        {static} -FORMATO_DATA: DateTimeFormatter
+        -registros: List<String>
+        -HistoricoAuditoria()
+        {static} +obterInstancia(): HistoricoAuditoria
+        +registrar(nomeAmbiente: String, provedor: String, resultado: String): void
+        +obterRegistros(): List<String>
+        +imprimirHistorico(): void
+    }
+
+    Main ..> SolicitacaoAmbiente
+    Main ..> Configuracao : carrega uma vez
+    Main ..> HistoricoAuditoria
+    Main ..> FabricaAws : seleciona
+    Main ..> FabricaAzure : seleciona
+    FabricaAws ..> MaquinaAws
+    FabricaAws ..> ArmazenamentoAws
+    FabricaAws ..> FilaAws
+    FabricaAzure ..> MaquinaAzure
+    FabricaAzure ..> ArmazenamentoAzure
+    FabricaAzure ..> FilaAzure
+
+    note right of HistoricoAuditoria
+      Singleton thread-safe: registro sincronizado
+      mantém a ordem dos eventos concorrentes.
+    end note
+    note right of FabricaRecursosNuvem
+      Fábricas concretas criam famílias
+      coerentes de produtos do mesmo provedor.
+    end note
+}
+@enduml
