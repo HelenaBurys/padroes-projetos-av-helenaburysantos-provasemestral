@@ -1,0 +1,201 @@
+@startuml leilao-online
+top to bottom direction
+scale 0.75
+package questao2 {
+    class Main {
+        {static} +main(args: String[]): void
+    }
+
+    class Lote <<Subject>> {
+        -nome: String
+        -categoria: String
+        -precoInicial: double
+        -precoReserva: double
+        -maiorLance: double
+        -lances: List<Lance>
+        -observadores: List<ObservadorLance>
+        -regraComissao: RegraComissao
+        -encerrado: boolean
+        -vendido: boolean
+        -valorComissao: double
+        +Lote(nome: String, categoria: String, precoInicial: double, precoReserva: double, regraComissao: RegraComissao)
+        +adicionarObservador(observador: ObservadorLance): void
+        +removerObservador(observador: ObservadorLance): void
+        +registrarLance(autor: AutorLance, valor: double): boolean
+        +encerrar(): boolean
+        +alterarRegraComissao(novaRegra: RegraComissao): void
+        +getNome(): String
+        +getCategoria(): String
+        +getPrecoInicial(): double
+        +getPrecoReserva(): double
+        +getMaiorLance(): double
+        +getQuantidadeLances(): int
+        +getLances(): List<Lance>
+        +isEncerrado(): boolean
+        +isVendido(): boolean
+        +getValorComissao(): double
+        +getValorLiquidoVendedor(): double
+        +getNomeRegraComissao(): String
+    }
+
+    class Lance {
+        -nomeParticipante: String
+        -valor: double
+        +Lance(nomeParticipante: String, valor: double)
+        +getNomeParticipante(): String
+        +getValor(): double
+    }
+
+    interface ObservadorLance <<Observer>> {
+        +atualizar(lote: Lote, lance: Lance, autor: AutorLance): void
+    }
+
+    class Participante <<Concrete Observer>> {
+        -nome: String
+        +Participante(nome: String)
+        +getNome(): String
+        +acompanhar(lote: Lote): void
+        +deixarDeAcompanhar(lote: Lote): void
+        +darLance(lote: Lote, valor: double): void
+        +atualizar(lote: Lote, lance: Lance, autor: AutorLance): void
+    }
+    class PainelLeiloeiro <<Concrete Observer>> {
+        +atualizar(lote: Lote, lance: Lance, autor: AutorLance): void
+    }
+    class AuditorLances <<Concrete Observer>> {
+        {static} -FORMATO: DateTimeFormatter
+        -registros: List<String>
+        +atualizar(lote: Lote, lance: Lance, autor: AutorLance): void
+        +getRegistros(): List<String>
+        +imprimirRegistros(): void
+    }
+    interface AutorLance {
+        +getNome(): String
+    }
+
+    interface RegraComissao <<Strategy>> {
+        +calcularComissao(valorVenda: double): double
+        +getNomeRegra(): String
+    }
+    class ComissaoArte <<Concrete Strategy>> {
+        {static} +PERCENTUAL: double = 0.20
+        +calcularComissao(valorVenda: double): double
+        +getNomeRegra(): String
+    }
+    class ComissaoVeiculos <<Concrete Strategy>> {
+        {static} +PERCENTUAL: double = 0.08
+        {static} +LIMITE_MAXIMO: double = 5000.00
+        +calcularComissao(valorVenda: double): double
+        +getNomeRegra(): String
+    }
+    class ComissaoImoveis <<Concrete Strategy>> {
+        {static} +PERCENTUAL: double = 0.03
+        {static} +VALOR_FIXO: double = 1500.00
+        +calcularComissao(valorVenda: double): double
+        +getNomeRegra(): String
+    }
+    class ComissaoEletronicos <<Concrete Strategy>> {
+        {static} +PERCENTUAL: double = 0.12
+        {static} +VALOR_MINIMO: double = 50.00
+        +calcularComissao(valorVenda: double): double
+        +getNomeRegra(): String
+    }
+
+    interface ComponenteFatura <<Component>> {
+        +obterItens(): List<ItemFatura>
+        +getValorVenda(): double
+    }
+    class FaturaVenda <<Concrete Component>> {
+        -nomeLote: String
+        -valorVenda: double
+        +FaturaVenda(lote: Lote)
+        +obterItens(): List<ItemFatura>
+        +getValorVenda(): double
+    }
+    abstract class ServicoAdicional <<Decorator>> {
+        -faturaDecorada: ComponenteFatura
+        #ServicoAdicional(faturaDecorada: ComponenteFatura)
+        #getDescricaoServico(): String
+        #calcularCusto(valorVenda: double): double
+        +obterItens(): List<ItemFatura>
+        +getValorVenda(): double
+    }
+    class SeguroTransporte <<Concrete Decorator>> {
+        {static} +PERCENTUAL: double = 0.015
+        +SeguroTransporte(faturaDecorada: ComponenteFatura)
+        #getDescricaoServico(): String
+        #calcularCusto(valorVenda: double): double
+    }
+    class CertificadoAutenticidade <<Concrete Decorator>> {
+        {static} +VALOR: double = 300.00
+        +CertificadoAutenticidade(faturaDecorada: ComponenteFatura)
+        #getDescricaoServico(): String
+        #calcularCusto(valorVenda: double): double
+    }
+    class EmbalagemEspecial <<Concrete Decorator>> {
+        {static} +VALOR: double = 180.00
+        +EmbalagemEspecial(faturaDecorada: ComponenteFatura)
+        #getDescricaoServico(): String
+        #calcularCusto(valorVenda: double): double
+    }
+    class EntregaExpressa <<Concrete Decorator>> {
+        {static} +VALOR: double = 450.00
+        +EntregaExpressa(faturaDecorada: ComponenteFatura)
+        #getDescricaoServico(): String
+        #calcularCusto(valorVenda: double): double
+    }
+    class ItemFatura {
+        -descricao: String
+        -valor: double
+        +ItemFatura(descricao: String, valor: double)
+        +getDescricao(): String
+        +getValor(): double
+    }
+    class FaturaComprador {
+        -FaturaComprador()
+        {static} +imprimir(fatura: ComponenteFatura): void
+    }
+    class AcertoVendedor {
+        -AcertoVendedor()
+        {static} +imprimir(lote: Lote): void
+    }
+
+    Lote "1" o-- "0..*" Lance : registra
+    Lote "1" o-- "0..*" ObservadorLance : notifica
+    Participante ..|> ObservadorLance
+    Participante ..|> AutorLance
+    PainelLeiloeiro ..|> ObservadorLance
+    AuditorLances ..|> ObservadorLance
+    Lote --> RegraComissao : estratégia atual
+    ComissaoArte ..|> RegraComissao
+    ComissaoVeiculos ..|> RegraComissao
+    ComissaoImoveis ..|> RegraComissao
+    ComissaoEletronicos ..|> RegraComissao
+
+    FaturaVenda ..|> ComponenteFatura
+    ServicoAdicional ..|> ComponenteFatura
+    ServicoAdicional o--> ComponenteFatura : decora
+    SeguroTransporte --|> ServicoAdicional
+    CertificadoAutenticidade --|> ServicoAdicional
+    EmbalagemEspecial --|> ServicoAdicional
+    EntregaExpressa --|> ServicoAdicional
+    FaturaVenda ..> ItemFatura : cria item base
+    ServicoAdicional ..> ItemFatura : acrescenta item
+    FaturaComprador ..> ComponenteFatura : imprime qualquer composicao
+    AcertoVendedor ..> Lote
+    Main ..> Lote : demonstra
+}
+
+note right of Lote
+  Observer: interessados intercambiáveis
+  e notificações em lances aceitos.
+end note
+note right of RegraComissao
+  Strategy: a regra do lote pode
+  ser trocada antes do encerramento.
+end note
+note right of ServicoAdicional
+  Decorator: serviços são empilháveis
+  e podem ser repetidos.
+end note
+@enduml
